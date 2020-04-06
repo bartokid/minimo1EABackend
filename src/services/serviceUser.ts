@@ -18,7 +18,7 @@ function getUserById(req:Request,res:Response){
        }
        else
        {
-        res.status(404);
+        res.status(404).json({message:"User NOT FOUND"});
        }
     });
 }
@@ -45,6 +45,7 @@ function userLogin(req:Request,res:Response,next:NextFunction) {
     console.log('Logging in');
     passport.authenticate("local", function (err, user, info) {
         // no async/await because passport works only with callback ..
+        console.log('Inside authenticate')
         if (err) return next(err);
         if (!user) {
             return res.status(401).json({ status: "error", code: "unauthorized" });
@@ -80,6 +81,3 @@ export default{getUserById,addUser,userLogin};
 //     });
 //     return answer ;
 // }
-
-
-
