@@ -5,7 +5,7 @@ import path from 'path';
 import mongoose from 'mongoose';
 import bodyParser from 'body-parser';
 import cors from 'cors';
-import {initiateDB} from './database' //importamos la funcion para init DB
+import {initiateDB} from './database'
 import router from './routes/routes';
 import swaggerUi from 'swagger-ui-express';
 import * as swaggerDocument from '../swagger.json';
@@ -44,7 +44,6 @@ initiateDB();
 //Inicialización del Servidor
 app.listen(port,function(){
     console.log('Server Listening on port: '+port);
-
     app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 }

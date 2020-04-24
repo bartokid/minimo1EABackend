@@ -1,9 +1,9 @@
 import {Router} from 'express';
-import userRoute from './userRoute';
+import resClinicoRoute from './resClinicoRoute'
 const router:Router = Router();
 
-router.use('/user',userRoute);
 
+router.use('/resclinico', resClinicoRoute)
 
 export default router;
 
