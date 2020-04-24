@@ -4,7 +4,7 @@ import * as jwt from "jsonwebtoken";
 import passport from "passport";
 //import {LocalStrategy} from "../auth/passportHandler";
 import {JWT_SECRET} from "../util/secrets";
-import {Schema, model} from 'mongoose'
+import {Schema, model} from 'mongoose';
 
 function getUserById(req:Request,res:Response){
     const idUser  =  req.query.idUser || '';	
@@ -24,7 +24,7 @@ function getUserById(req:Request,res:Response){
 }
 
 //Register new user into the database
-async function addUser(req:Request, res:Response){
+async function registerUser(req:Request, res:Response){
     const email = req.body.email;
     let existUser = await User.findOne({email: email});
     if(existUser){
@@ -43,7 +43,8 @@ async function addUser(req:Request, res:Response){
     }
 }
 
-function userLogin(req:Request,res:Response,next:NextFunction) {
+//Login user into the application
+function login(req:Request,res:Response,next:NextFunction) {
     console.log('Logging in');
     if(!req.body.email || !req.body.password){
         return res.status(400).json({'msg':'You need to send email and password'});
@@ -61,7 +62,8 @@ function userLogin(req:Request,res:Response,next:NextFunction) {
             if(isMatch && !err){
                 console.log('Logged in successfully');
                 return res.status(200).json({
-                    token: jwt.sign({email: user.email}, JWT_SECRET, {expiresIn: 60})
+                    token: jwt.sign({email: user.email}, JWT_SECRET, {expiresIn: 60}),
+                    user: this.user
                 })
             }
             else{
@@ -72,7 +74,88 @@ function userLogin(req:Request,res:Response,next:NextFunction) {
     })
 }
 
-export default{getUserById,addUser,userLogin};
+
+function updateUser(req: Request, res: Response){
+    let firstname = req.body.firstname;
+    let lastname = req.body.lastname;
+    let email = req.body.email;
+    let phoneNumber = req.body.phoneNumber;
+    let password = req.body.password;
+    let updateduser = User.updateOne(
+        { firstname: firstname },
+        { lastname: lastname },
+        { email: email },
+        { phoneNumber: phoneNumber },
+        { password: password },
+        function(err, res) {
+            if(res.modifiedCount !=0){
+                return res.status(200).json({ 'User successfully updated'} + str(updateduser));
+            }else{
+                return res.status(400).json({'user not modified'});
+            }
+});
+}
+
+
+function getUser(req:Request,res:Response){
+ const username  =  req.query.firstname || '';
+ console.log('Searching user by Id...');
+ //We find the user
+ User.findOne({ 'firstname': username }s,(err,doc)=>{
+     if(!err) {
+       console.log(doc);
+        res.status(200).json(doc);
+    }  else  {
+     res.status(404).json({message:"User NOT FOUND"});
+    }
+ });
+}
+
+
+
+function getUsers(){
+ console.log('Searching all users ...');
+    let users = await User.find((err,doc)=>{
+        if(!err){
+           console.log(doc);
+           res.status(200).json(doc);
+       }
+       else{
+            res.status(404).json({message:"No users found"});
+        });
+}
+
+function deleteUser(req:Request,res:Response,next:NextFunction){
+ console.log('deleting user');
+    if(!req.body.email || !req.body.password){
+        return res.status(400).json({'msg':'You need to send email and password'});
+    }
+    User.findOne({email: req.body.email}, (err,user:any)=>{
+        if(err){
+            return res.status(400).json({'msg': err});
+        }
+        if(!user){
+            return res.status(400).json({'msg': 'The user does not exists'});
+        }
+        user.comparePassword(req.body.password, (err: Error, isMatch: boolean) => {
+            if(isMatch && !err){
+                console.log('successfully deleted');
+                User.deleteOne({ email: req.body.email, password: req.body.password }, function (err) {
+                  if (err) return handleError(err);
+                    return res.status(200).json({
+                           user: this.user
+                        })
+                    });
+            }
+            else{
+                return res.status(400).json({'msg': 'The email and password don\'t match.'});
+            }
+        })
+
+    })
+}
+
+export default{getUserById, registerUser, login, deleteUser, getUsers, getUser, updateUser};
 
 
 
